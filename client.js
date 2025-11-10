@@ -125,7 +125,7 @@ class Client {
             this.groups[groupId] = { version: groupInfo.version };
             console.log(`   ✅ Grupo ${groupId} versão ${groupInfo.version}`);
           } catch (err) {
-            console.log(`   ❌ Erro ao obter info do grupo ${groupId}:`, err.message);
+            console.log(`   ❌ Erro ao obter info do grupo ${groupId}:`, err.message); 
           }
         }
         this.saveJSON(this.groupsFile, this.groups);
@@ -294,13 +294,16 @@ class Client {
       }
 
       const iv = crypto.randomBytes(12);//geração de valores aleátorios para manter a segurança
-      console.log(`Valor aleatorio para usar na criptografia: ${iv}`);
+      //console.log(`Valor aleatorio para usar na criptografia: ${iv}`);
       const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);//criptografa a chave 'key'
-      console.log(`Chave criptografada: ${cipher}`);
-      
+      //console.log(`Chave criptografada: ${cipher}`);
+      console.log(`Mensagem antes da criptografia: ${msg}`);
       let encrypted = cipher.update(msg, 'utf8', 'base64');
+      console.log(`Mensagem encriptrada: ${encryted}`);
       encrypted += cipher.final('base64');
+      console.log(`Mensagem encriptada + final base64: ${encrypted}`);
       const authTag = cipher.getAuthTag();
+      console.log(`Tag de autenticação: ${authtag}`);
 
       const payload = {
         iv: iv.toString('base64'),
@@ -317,7 +320,6 @@ class Client {
         body: JSON.stringify({ 
           to: peer, 
           from_user: this.username, 
-          text : msg,
           payload: encodedPayload
         }),
       });

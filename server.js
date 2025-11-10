@@ -97,7 +97,11 @@ app.get("/prekey/:user", (req, res) => {
 // =====================
 
 app.post("/send_message", (req, res) => {
-    const { to, from_user ,payload } = req.body;
+    const { to, from_user, payload } = req.body;
+
+    if(!to || !from_user || !payload){
+        return res.status(400).json({error: "Parametros 'to', 'from_user' e 'payload' são obrigatórios"});
+    }
 
     if (!users[to] || !user_prekeys[to]) {
         return res.status(400).json({ error: "Destinatário não registrado ou sem prekey" });
@@ -107,16 +111,15 @@ app.post("/send_message", (req, res) => {
         user_queues[to] = [];
     }
 
-     message = {
+    const message = {
         from: from_user,
         encrypted_message: payload,
         timestamp: Date.now()
     };
 
     user_queues[to].push(message);
-    //console.log(message)
+    console.log(message)
     console.log(`✅ Mensagem privada de ${from_user} para ${to}`);
-
     res.json({ success: true });
 });
 
