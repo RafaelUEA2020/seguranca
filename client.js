@@ -263,17 +263,20 @@ class Client {
         type: 'spki',
         format: 'der'
       });
+      console.log(`Chave publica do ${peer}: ${peerPublicKey}`);
 
       const localPrivateKey = this.getPrivateKey(this.prekey);
-
+      console.log(`Chave local privada: ${localPrivateKey}`);
       const sharedSecret = crypto.diffieHellman({
         privateKey: localPrivateKey,
         publicKey: peerPublicKey
       });
+      console.log(`\nSegredo compartilhado: ${sharedSecret}`);
 
       const sessionKey = this.deriveSessionKey(sharedSecret, peer);
-
+      console.log(`Chave da sessão, formada pelo segredo secreto${sharedSecret} e o destinatario: ${peer}`);
       this.sessions[peer] = sessionKey.toString('base64');
+      console.log(`Sessão + a base64 ${sessions[peer]}`);
       this.saveJSON(this.sessionFile, this.sessions);
       
       console.log(`✅ Sessão estabelecida com ${peer}`);
@@ -287,24 +290,25 @@ class Client {
 
   async send1to1(peer, msg) {
     try {
-      const key = await this.ensureSession(peer);
+      const key = await this.ensureSession(peer);//verifica se é possível estavelecer conexão com o caba.
       if (!key) {
         console.log(`❌ Não foi possível estabelecer sessão com ${peer}`);
         return;
       }
 
       const iv = crypto.randomBytes(12);//geração de valores aleátorios para manter a segurança
-      //console.log(`Valor aleatorio para usar na criptografia: ${iv}`);
-      const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);//criptografa a chave 'key'
-      //console.log(`Chave criptografada: ${cipher}`);
+      console.log(`Valor aleatorio para usar na criptografia: ${iv.toString('base64')}`);
+      const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);//criptografa a chave 'key' nao dá pra printar porque é uma junção de varias criptogfrafias.
+      console.log(`Chave criptografada: ${cipher.toString('base64')}`);
       console.log(`Mensagem antes da criptografia: ${msg}`);
       let encrypted = cipher.update(msg, 'utf8', 'base64');
-      console.log(`Mensagem encriptrada: ${encryted}`);
+      console.log(`Mensagem encriptrada: ${encrypted.toString('base64')}`);
       encrypted += cipher.final('base64');
       console.log(`Mensagem encriptada + final base64: ${encrypted}`);
       const authTag = cipher.getAuthTag();
-      console.log(`Tag de autenticação: ${authtag}`);
+      console.log(`Tag de autenticação: ${authTag.toString('base64')}`);
 
+      //payload que depois vai vira um empacotado para ser enviado em uma linha só.
       const payload = {
         iv: iv.toString('base64'),
         tag: authTag.toString('base64'),
@@ -313,6 +317,8 @@ class Client {
       };
 
       const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64');
+      ;// a linha de cima trasforma tudo em bytes atraves do buffer e depois muda tudo para base 64.
+      console.log(`Mensagem em base64 enviada via HTTP: ${encodedPayload}`);
 
       await this.makeRequest(`${SERVER}/send_message`, {
         method: "POST",
