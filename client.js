@@ -416,7 +416,9 @@ class Client {
   async createGroup(groupId, members) {
     try {
       console.log(`🔧 Criando grupo ${groupId} com membros: ${members.join(', ')}`);
-      
+      //let groupIdEncoded = crypto.createHash('sha256').update(groupId).digest();
+      let groupIdEncoded = Buffer.from(groupId, 'base64')//criar um id pro grupo que possa ser mudado conforme os integrantes mudem
+      console.log(`hash do grupo: ${groupHash.toString()}`);
       const result = await this.makeRequest(`${SERVER}/create_group`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -487,6 +489,7 @@ class Client {
       delete this.groups[groupId];
       this.saveJSON(this.groupsFile, this.groups);
       
+
       if (result.group_deleted) {
         console.log(`✅ Saiu do grupo '${groupId}' (grupo foi deletado)`);
       } else {
