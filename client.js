@@ -75,9 +75,9 @@ class Client {
     console.log(`Material: ${material}`);
     
     let key = crypto.createHash('sha256').update(material).digest();
-    //console.log(`Chave criptografada: ${key}`); //printando a chave criptografada
+    console.log(`Chave criptografada: ${key.toString()}`); //printando a chave criptografada
     key = crypto.createHash('sha256').update(key).digest();
-    //console.log(`Chave atualizada: ${key}`); //printando a chave criptografada
+    console.log(`Chave atualizada: ${key.toString()}`); //printando a chave criptografada
     
     return key.slice(0, 32);
   }
@@ -248,6 +248,8 @@ class Client {
   async ensureSession(peer) {
     if (this.sessions[peer]) {
       const existingKey = Buffer.from(this.sessions[peer], "base64");
+      console.log(`checa a chave existente: ${existingKey} do ${peer}`);
+      console.log(`Tamanho da chave: ${existingKey.length}`);
       if (existingKey.length === 32) {
         return existingKey;
       }
@@ -263,20 +265,34 @@ class Client {
         type: 'spki',
         format: 'der'
       });
-      console.log(`Chave publica do ${peer}: ${peerPublicKey}`);
+
+      const pemKey = peerPublicKey.export({
+        type: 'spki',
+        format: 'pem'
+      }).toString();
+
+      console.log(`Chave publica do PEM: ${pemKey}`);
+
+      const exportedBase64 = peerPublicKey.export({
+        type: 'spki',
+        format: 'der'
+      }).toString('base64');
+
+      console.log("Chave publica em base64: ");
+      console.log(exportedBase64);
 
       const localPrivateKey = this.getPrivateKey(this.prekey);
-      console.log(`Chave local privada: ${localPrivateKey}`);
+      //console.log(`Chave local privada: ${localPrivateKey.toString('base64')}`);
       const sharedSecret = crypto.diffieHellman({
         privateKey: localPrivateKey,
         publicKey: peerPublicKey
       });
-      console.log(`\nSegredo compartilhado: ${sharedSecret}`);
+      console.log(`Segredo compartilhado: ${sharedSecret}`);
 
       const sessionKey = this.deriveSessionKey(sharedSecret, peer);
-      console.log(`Chave da sessão, formada pelo segredo secreto${sharedSecret} e o destinatario: ${peer}`);
+      console.log(`Chave da sessão, formada pelo segredo secreto: ${sharedSecret.toString('base64')} e o destinatario: ${peer}`);
       this.sessions[peer] = sessionKey.toString('base64');
-      console.log(`Sessão + a base64 ${sessions[peer]}`);
+      console.log(`Sessão + a base64 ${sessions[peer].toString('base64')}`);
       this.saveJSON(this.sessionFile, this.sessions);
       
       console.log(`✅ Sessão estabelecida com ${peer}`);
@@ -330,7 +346,7 @@ class Client {
         }),
       });
       
-      console.log(`✅ Mensagem enviada para ${peer}`);
+      console.log(`✅ Mensagem enviada para ${peer} com sucesso!`);
       
     } catch (err) {
       console.error("❌ Erro ao enviar mensagem:", err.message);
@@ -365,6 +381,7 @@ class Client {
   async processMessage(m) {
     try {
       const key = await this.ensureSession(m.from);
+      console.log(key);
       if (!key) {
         console.log(`❌ Sessão não estabelecida com ${m.from}`);
         return;
@@ -386,7 +403,7 @@ class Client {
       console.log(`💬 ${m.from}: ${decrypted}`);
       
     } catch (err) {
-      // console.error(`❌ Erro ao decifrar mensagem de ${m.from}:`, err.message);
+      console.error(`❌ Erro ao decifrar mensagem de ${m.from}:`, err.message);
       delete this.sessions[m.from];
       this.saveJSON(this.sessionFile, this.sessions);
     }
@@ -418,7 +435,7 @@ class Client {
         console.log("   Eles serão adicionados automaticamente ao se registrarem");
       }
       
-      // Adicionar o grupo à lista loscal
+      // Adicionar o grupo à lista local
       this.groups[groupId] = { version: result.version };
       this.saveJSON(this.groupsFile, this.groups);
       

@@ -90,6 +90,7 @@ app.get("/prekey/:user", (req, res) => {
     }
 
     res.json({ x25519_pub: user_prekeys[user] });
+    console.log(`prekey encontrada: ${user_prekeys[user]}`);
 });
 
 // =====================
@@ -132,10 +133,10 @@ app.post("/fetch_messages", (req, res) => {
 
     const messages = user_queues[user];
 
-    console.log(`📨 Entregando ${messages.length} mensagens para ${user}`);
+    console.log(`📨 Olha a mensagem! ${messages.length} \nmensagens para ${user}`);
     
     res.json({ messages });
-    console.log({user_queues});
+    console.log(`fila de mensagem: ${user_queues}`);
     //user_queues[user] = []; // Limpar fila
 });
 
